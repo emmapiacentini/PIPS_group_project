@@ -1,4 +1,4 @@
-data <- read.csv("Teen_Mental_Health_Dataset.csv", stringsAsFactors = FALSE) 
+data <- read.csv("../data/Teen_Mental_Health_Dataset.csv", stringsAsFactors = FALSE)
 stopifnot(!anyNA(data))
 data$gender <- factor(data$gender)
 data$platform_usage <- factor(data$platform_usage,
