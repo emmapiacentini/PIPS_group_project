@@ -16,8 +16,8 @@ The project fits and checks a linear regression (with a test of platform as a wh
 Clone the repository:
 
 ```bash
-git clone <your-repository-url>
-cd pips-anxiety-risk
+git clone https://github.com/emmapiacentini/PIPS_group_project.git
+cd PIPS_group_project
 ```
 
 The project requires R 4.1 or newer; RStudio is recommended. Install the required packages once:
