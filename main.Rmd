@@ -1,8 +1,8 @@
 ---
 title: "Social media, platform and adolescent anxiety"
 subtitle: "A regression analysis and an interactive risk explorer"
-author: "[Add your names here]"
-date: "`r format(Sys.Date(), '%d %B %Y')`"
+author: "Emma Piacentini, Defne Memis, Lieve Visser"
+date: "22 October 2026"
 output:
   html_document:
     toc: true
