@@ -8,10 +8,10 @@ output:
     toc: true
     toc_float: true
 ---
+
 ## 1. Background and research question
 
-Many parents, teachers and policy makers worry that heavy social media use harms adolescent mental health. A systematic review by Keles et al. (2020) linked social media use to depression, anxiety and psychological distress in young people, and Woods and Scott (2016) reported that adolescents' social media use was associated with poorer sleep and with higher anxiety and depression. At the same time, large-scale analyses suggest that the overall association between technology use and well-being is negative but small (Orben & Przybylski, 2019). Because sleep is closely tied to both social media use and anxiety, it needs to be taken into account when judging the role of social media.
-This project asks:
+Many parents, teachers and policy makers worry that heavy social media use harms adolescent mental health. A systematic review by Keles et al. (2020) linked social media use to depression, anxiety and psychological distress in young people, and Woods and Scott (2016) reported that adolescents' social media use was associated with poorer sleep and with higher anxiety and depression. At the same time, large-scale analyses suggest that the overall association between technology use and well-being is negative but small (Orben & Przybylski, 2019). Because sleep is closely tied to both social media use and anxiety, it needs to be taken into account when judging the role of social media. This project asks:
 
 > **Is daily social media use, and the platform a teenager mainly uses, associated with anxiety once we control for age, gender and sleep?**
 
@@ -19,12 +19,12 @@ We analyse a dataset of teenagers (`data/Teen_Mental_Health_Dataset.csv`) with a
 
 **How this document is organised.** The code lives in `src/`; this document calls it and explains the results.
 
-| Section | What happens | Script |
-|---|---|---|
-| 2 | Load and prepare the data | `src/data.R` |
-| 3 | Regression analysis, checks and plots | `src/analysis_and_plots.R` |
-| 4 | Risk estimates and the Shiny app | `src/app.R` |
-| 5 | Limitations and conclusion | |
+| Section | What happens                          | Script                     |
+|---------|---------------------------------------|----------------------------|
+| 2       | Load and prepare the data             | `src/data.R`               |
+| 3       | Regression analysis, checks and plots | `src/analysis_and_plots.R` |
+| 4       | Risk estimates and the Shiny app      | `src/app.R`                |
+| 5       | Limitations and conclusion            |                            |
 
 ## 2. Data
 
@@ -37,10 +37,6 @@ knitr::opts_chunk$set(message = FALSE, warning = FALSE, fig.align = "center")
 source(file.path("src", "data.R"), local = TRUE)
 ```
 
-<<<<<<< HEAD
-
-
-=======
 ```{r describe-data}
 summary(data[, c("age", "daily_social_media_hours", "sleep_hours", "anxiety_level")])
 ```
@@ -85,6 +81,7 @@ sleep <- coef_table["sleep_hours", ]
 ci_social <- ci_table["daily_social_media_hours", ]
 ci_sleep <- ci_table["sleep_hours", ]
 platform_p <- platform_test[["Pr(>F)"]][2]
+```
 
 ### 3.3 Results
 
@@ -127,8 +124,8 @@ The app lets a user enter their daily social media use and sleep. Age, gender an
 
 The app combines two models that use these two predictors:
 
-1. A **linear model** gives the predicted anxiety score and a 95% prediction interval, the range in which an individual teenager's score is expected to fall. Scores are clamped to the 1-10 scale.
-2. A **logistic model** estimates the probability of *high anxiety*, defined as a score of 7 or more.
+1.  A **linear model** gives the predicted anxiety score and a 95% prediction interval, the range in which an individual teenager's score is expected to fall. Scores are clamped to the 1-10 scale.
+2.  A **logistic model** estimates the probability of *high anxiety*, defined as a score of 7 or more.
 
 Risk bands are defined on the predicted score: 1-3 **low**, 4-6 **moderate**, 7-10 **high**. These cut-offs are a convention of this project, not clinical thresholds.
 
@@ -174,17 +171,16 @@ In the app you set your daily social media use and sleep. It shows the risk band
 
 ## References
 
-Keles, B., McCrae, N., & Grealish, A. (2020). A systematic review: The influence of social media on depression, anxiety and psychological distress in adolescents. *International Journal of Adolescence and Youth, 25*(1), 79-93. https://doi.org/10.1080/02673843.2019.1590851
+Keles, B., McCrae, N., & Grealish, A. (2020). A systematic review: The influence of social media on depression, anxiety and psychological distress in adolescents. *International Journal of Adolescence and Youth, 25*(1), 79-93. <https://doi.org/10.1080/02673843.2019.1590851>
 
-Orben, A., & Przybylski, A. K. (2019). The association between adolescent well-being and digital technology use. *Nature Human Behaviour, 3*, 173-182. https://doi.org/10.1038/s41562-018-0506-1
+Orben, A., & Przybylski, A. K. (2019). The association between adolescent well-being and digital technology use. *Nature Human Behaviour, 3*, 173-182. <https://doi.org/10.1038/s41562-018-0506-1>
 
 Wickham, H. (2016). *ggplot2: Elegant graphics for data analysis*. Springer-Verlag New York.
 
-Woods, H. C., & Scott, H. (2016). #Sleepyteen: Social media use in adolescence is associated with poor sleep quality, anxiety, depression and low self-esteem. *Journal of Adolescence, 51*, 41-49. https://doi.org/10.1016/j.adolescence.2016.05.008
+Woods, H. C., & Scott, H. (2016). #Sleepyteen: Social media use in adolescence is associated with poor sleep quality, anxiety, depression and low self-esteem. *Journal of Adolescence, 51*, 41-49. <https://doi.org/10.1016/j.adolescence.2016.05.008>
 
 ## Session information
 
 ```{r session-info}
 sessionInfo()
 ```
->>>>>>> 59b4190f1d3c5311bd40f5f4de642fae36ea558e
