@@ -1,12 +1,190 @@
 ---
-title: "main.Rmd"
-output: html_document
-date: "2026-10-14"
+title: "Social media, platform and adolescent anxiety"
+subtitle: "A regression analysis and an interactive risk explorer"
+author: "Emma Piacentini, Defne Memis, Lieve Visser"
+date: "22 October 2026"
+output:
+  html_document:
+    toc: true
+    toc_float: true
 ---
+## 1. Background and research question
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+Many parents, teachers and policy makers worry that heavy social media use harms adolescent mental health. A systematic review by Keles et al. (2020) linked social media use to depression, anxiety and psychological distress in young people, and Woods and Scott (2016) reported that adolescents' social media use was associated with poorer sleep and with higher anxiety and depression. At the same time, large-scale analyses suggest that the overall association between technology use and well-being is negative but small (Orben & Przybylski, 2019). Because sleep is closely tied to both social media use and anxiety, it needs to be taken into account when judging the role of social media.
+This project asks:
+
+> **Is daily social media use, and the platform a teenager mainly uses, associated with anxiety once we control for age, gender and sleep?**
+
+We analyse a dataset of teenagers (`data/Teen_Mental_Health_Dataset.csv`) with a linear regression, and then turn the results into an interactive Shiny app in which a user enters their own social media use and sleep and sees an estimated anxiety risk.
+
+**How this document is organised.** The code lives in `src/`; this document calls it and explains the results.
+
+| Section | What happens | Script |
+|---|---|---|
+| 2 | Load and prepare the data | `src/data.R` |
+| 3 | Regression analysis, checks and plots | `src/analysis_and_plots.R` |
+| 4 | Risk estimates and the Shiny app | `src/app.R` |
+| 5 | Limitations and conclusion | |
+
+## 2. Data
+
+Run this document from the repository root. Install the packages once with `install.packages(c("ggplot2", "shiny", "knitr", "rmarkdown"))`.
+
+`data.R` loads the packages, reads the CSV, checks for missing values, and turns gender and platform into factors. Platform uses "Other" as the reference category, so the platform coefficients compare Both, Instagram and TikTok against "Other".
+
+```{r setup}
+knitr::opts_chunk$set(message = FALSE, warning = FALSE, fig.align = "center")
+source(file.path("src", "data.R"), local = TRUE)
 ```
 
+<<<<<<< HEAD
 
 
+=======
+```{r describe-data}
+summary(data[, c("age", "daily_social_media_hours", "sleep_hours", "anxiety_level")])
+```
+
+The sample has `r nrow(data)` teenagers aged `r min(data$age)`-`r max(data$age)` (`r sum(data$gender == "female")` female, `r sum(data$gender == "male")` male). Anxiety is measured on an integer scale from 1 to 10 (M = `r sprintf("%.2f", mean(data$anxiety_level))`, SD = `r sprintf("%.2f", sd(data$anxiety_level))`). Social media use and sleep are strongly negatively correlated (r = `r sprintf("%.2f", cor(data$daily_social_media_hours, data$sleep_hours))`), so teenagers who use social media a lot also tend to sleep less. This is why the model below estimates their effects jointly.
+
+## 3. Statistical analysis
+
+The analysis script fits an ordinary least squares regression, runs the checks, and builds the plots. Running it creates the objects used below (`model`, `model_no_platform`, `p_scatter`, `p_coefs`, ...).
+
+```{r analysis}
+source(file.path("src", "analysis_and_plots.R"), local = TRUE)
+```
+
+### 3.1 The key relationship
+
+```{r plot-scatter, fig.width = 8, fig.height = 6}
+p_scatter
+```
+
+Anxiety rises steadily with social media hours, and the trend looks the same on every platform.
+
+### 3.2 The model
+
+`anxiety_level ~ daily_social_media_hours + platform_usage + age + gender + sleep_hours`
+
+Social media hours and platform are the predictors of interest. Age, gender and sleep are control variables, so each coefficient is the association of that predictor with anxiety among teenagers who are the same on all the other predictors.
+
+```{r model-summary}
+summary(model)
+confint(model)
+```
+
+```{r key-numbers, include = FALSE}
+coef_table <- summary(model)$coefficients
+ci_table <- confint(model)
+platform_test <- anova(model_no_platform, model)
+fmt_p <- function(p) if (p < .001) "< .001" else paste0("= ", sub("^0", "", sprintf("%.3f", p)))
+
+social <- coef_table["daily_social_media_hours", ]
+sleep <- coef_table["sleep_hours", ]
+ci_social <- ci_table["daily_social_media_hours", ]
+ci_sleep <- ci_table["sleep_hours", ]
+platform_p <- platform_test[["Pr(>F)"]][2]
+
+### 3.3 Results
+
+The model explains a large share of the variance in anxiety (R² = `r sprintf("%.2f", summary(model)$r.squared)`, adjusted R² = `r sprintf("%.2f", summary(model)$adj.r.squared)`).
+
+- **Social media use.** Holding platform, age, gender and sleep constant, each additional hour of daily social media use is associated with a change of `r sprintf("%+.2f", social["Estimate"])` anxiety points (95% CI [`r sprintf("%.2f", ci_social[1])`, `r sprintf("%.2f", ci_social[2])`], p `r fmt_p(social["Pr(>|t|)"])`). This is by far the strongest predictor. Across the observed range of `r min(data$daily_social_media_hours)` to `r max(data$daily_social_media_hours)` hours, that adds up to roughly `r sprintf("%.1f", social["Estimate"] * diff(range(data$daily_social_media_hours)))` points on a 10-point scale.
+- **Sleep.** Each additional hour of sleep is associated with a change of `r sprintf("%+.2f", sleep["Estimate"])` points (95% CI [`r sprintf("%.2f", ci_sleep[1])`, `r sprintf("%.2f", ci_sleep[2])`], p `r fmt_p(sleep["Pr(>|t|)"])`), over and above social media use. Less sleep goes with more anxiety, even among teenagers with the same social media use.
+- **Platform.** Platform has four categories, so its effect is tested as a whole with a nested F test (full model vs. model without platform). Platform as a whole `r if (platform_p < 0.05) "explains" else "does not explain"` additional variance in anxiety: F(`r platform_test$Df[2]`, `r platform_test$Res.Df[2]`) = `r sprintf("%.2f", platform_test$F[2])`, p `r fmt_p(platform_p)`, change in R² = `r sprintf("%.4f", summary(model)$r.squared - summary(model_no_platform)$r.squared)`. `r if (platform_p < 0.05) "Platforms therefore differ in how strongly they relate to anxiety." else "In this dataset, how long teenagers use social media matters, but which platform they mainly use does not."`
+- **Age and gender.** Neither control variable is a meaningful predictor here: age B = `r sprintf("%.2f", coef_table["age", "Estimate"])` (p `r fmt_p(coef_table["age", "Pr(>|t|)"])`), male vs. female B = `r sprintf("%.2f", coef_table["gendermale", "Estimate"])` (p `r fmt_p(coef_table["gendermale", "Pr(>|t|)"])`).
+
+The coefficient plot summarises this. A predictor is significant when its confidence interval does not cross the dashed zero line.
+
+```{r plot-coefficients, fig.width = 8, fig.height = 4.5}
+p_coefs
+```
+
+### 3.4 Checking the model
+
+**Collinearity.** Social media use and sleep are strongly correlated, so we check variance inflation factors (VIF). Values below about 5 indicate that the coefficients can be estimated separately.
+
+```{r vif}
+vif_table(model)
+```
+
+The largest VIF is `r max(vif_table(model))`, so collinearity is not a problem.
+
+**Residuals.** The residuals vs. fitted plot checks linearity and constant variance, and the Q-Q plot checks normality.
+
+```{r residuals, fig.width = 9, fig.height = 4}
+plot_residual_checks(model)
+```
+
+The outcome is a bounded integer score, so the residuals cannot be perfectly normal. `r sum(data$anxiety_level == 1)` teenagers (`r sprintf("%.0f", 100 * mean(data$anxiety_level == 1))`%) have the minimum score of 1, more than for any other value, which creates a floor effect. With `r nrow(data)` observations the coefficient estimates are still reliable, but individual predictions near the ends of the scale are less precise. The app therefore never reports scores outside 1-10.
+
+## 4. From model to risk estimate: the Shiny app
+
+### 4.1 Two reduced models
+
+The app lets a user enter their daily social media use and sleep. Age, gender and platform are left out of the app because they add no predictive value: the model with only social media and sleep has R² = `r sprintf("%.3f", summary(lm(anxiety_level ~ daily_social_media_hours + sleep_hours, data = data))$r.squared)`, compared with `r sprintf("%.3f", summary(model)$r.squared)` for the full model.
+
+The app combines two models that use these two predictors:
+
+1. A **linear model** gives the predicted anxiety score and a 95% prediction interval, the range in which an individual teenager's score is expected to fall. Scores are clamped to the 1-10 scale.
+2. A **logistic model** estimates the probability of *high anxiety*, defined as a score of 7 or more.
+
+Risk bands are defined on the predicted score: 1-3 **low**, 4-6 **moderate**, 7-10 **high**. These cut-offs are a convention of this project, not clinical thresholds.
+
+```{r load-app}
+app <- source(file.path("src", "app.R"), local = TRUE)$value
+```
+
+### 4.2 Example predictions
+
+Three hypothetical teenagers, using the `estimate_risk()` function from `app.R`:
+
+```{r example-risk}
+examples <- data.frame(hours = c(2, 5, 8), sleep = c(8, 6.2, 4.5))
+
+risk_examples <- do.call(rbind, lapply(seq_len(nrow(examples)), function(i) {
+  r <- estimate_risk(examples$hours[i], examples$sleep[i])
+  data.frame(examples[i, ], predicted_score = r$score, lower = r$lower,
+             upper = r$upper, p_high = r$p_high, risk_band = r$band)
+}))
+knitr::kable(risk_examples, digits = 2,
+             col.names = c("Social media (h)", "Sleep (h)", "Predicted score",
+                           "Lower", "Upper", "P(high anxiety)", "Risk band"))
+```
+
+### 4.3 Launch the app
+
+The next chunk opens the app in your browser. It is only evaluated when you run the document interactively in RStudio, so it is skipped when knitting. **Stop the app (red stop button in the console) before running later chunks.**
+
+```{r launch-app, eval = interactive()}
+shiny::runApp(app, launch.browser = TRUE)
+```
+
+In the app you set your daily social media use and sleep. It shows the risk band, the predicted score with its prediction interval, the probability of high anxiety, and a risk map showing where you sit relative to the teenagers in the dataset.
+
+## 5. Limitations and conclusion
+
+- **Association, not causation.** The data are cross-sectional. Heavy social media use may increase anxiety, anxious teenagers may turn to social media more, or both may be driven by something else, such as stress or sleep problems. The model cannot distinguish between these.
+- **Data provenance.** The origin of the dataset is not documented here, and its relationships are unusually clean (for example, platform has essentially no association with anxiety, while stress and anxiety are correlated at r = `r sprintf("%.2f", cor(data$stress_level, data$anxiety_level))`). It may therefore be simulated. Treat the numbers as a demonstration of the method rather than as evidence about real teenagers, which is also a reason to read the effect sizes with caution given the small associations reported in real data (Orben & Przybylski, 2019).
+- **Other variables.** The dataset also contains stress, screen time before sleep, physical activity and others. We deliberately modelled only the predictors in the research question.
+- **Risk labels are not diagnoses.** The app turns a population-level regression into an individual estimate with a wide prediction interval. It is an educational tool, not a screening instrument.
+
+**Conclusion.** After controlling for age, gender and sleep, more daily social media use is strongly associated with higher anxiety in this dataset, shorter sleep is independently associated with higher anxiety, and the main platform makes no detectable difference.
+
+## References
+
+Keles, B., McCrae, N., & Grealish, A. (2020). A systematic review: The influence of social media on depression, anxiety and psychological distress in adolescents. *International Journal of Adolescence and Youth, 25*(1), 79-93. https://doi.org/10.1080/02673843.2019.1590851
+
+Orben, A., & Przybylski, A. K. (2019). The association between adolescent well-being and digital technology use. *Nature Human Behaviour, 3*, 173-182. https://doi.org/10.1038/s41562-018-0506-1
+
+Wickham, H. (2016). *ggplot2: Elegant graphics for data analysis*. Springer-Verlag New York.
+
+Woods, H. C., & Scott, H. (2016). #Sleepyteen: Social media use in adolescence is associated with poor sleep quality, anxiety, depression and low self-esteem. *Journal of Adolescence, 51*, 41-49. https://doi.org/10.1016/j.adolescence.2016.05.008
+
+## Session information
+
+```{r session-info}
+sessionInfo()
+```
+>>>>>>> 59b4190f1d3c5311bd40f5f4de642fae36ea558e
