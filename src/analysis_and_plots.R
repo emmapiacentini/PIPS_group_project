@@ -9,6 +9,8 @@ model <- lm(
     platform_usage + age + gender + sleep_hours,
   data = data
 )
+# Display the full model results
+print(summary(model))
 
 # Compare this model with the full model to test the
 # additional contribution of platform.
@@ -16,7 +18,8 @@ model_no_platform <- update(
   model,
   . ~ . - platform_usage
 )
-
+# Compare the models with and without platform
+print(anova(model_no_platform, model))
 
 # Calculate VIFs for the individual predictor columns
 # in the model matrix.
@@ -38,7 +41,8 @@ vif_table <- function(model) {
   
   setNames(round(vifs, 2), colnames(x))
 }
-
+# Display VIF values
+print(vif_table(model))
 
 # Show residual diagnostics and restore the previous
 # graphics settings afterwards.
@@ -48,7 +52,8 @@ plot_residual_checks <- function(model) {
   
   plot(model, which = 1:2)
 }
-
+# Display residual diagnostic plots
+plot_residual_checks(model)
 
 # Plot 1: Show the observed relationship within each platform.
 # These trend lines are not adjusted for the other predictors.
@@ -70,7 +75,8 @@ p_scatter <- ggplot(
     colour = "Main platform"
   ) +
   theme_minimal()
-
+# Display the scatterplot
+print(p_scatter)
 
 # Extract coefficients and their confidence intervals
 # from the adjusted regression model.
@@ -109,3 +115,6 @@ p_coefs <- ggplot(
     y = "Regression coefficient with 95% confidence interval"
   ) +
   theme_minimal()
+
+# Display the coefficient plot
+print(p_coefs)
