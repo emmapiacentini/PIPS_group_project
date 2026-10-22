@@ -56,71 +56,7 @@ plot_residual_checks <- function(model) {
 # Display residual diagnostic plots
 plot_residual_checks(model)
 
-# Plot 1: Show the observed relationship within each platform.
-# These trend lines are not adjusted for the other predictors.
-p_scatter <- ggplot(
-  data,
-  aes(
-    x = daily_social_media_hours,
-    y = anxiety_level,
-    colour = platform_usage
-  )
-) +
-  geom_point(alpha = 0.25) +
-  geom_smooth(method = "lm", formula = y ~ x) +
-  labs(
-    title = "Social media use and anxiety by platform",
-    subtitle = "Lines show unadjusted trends with 95% confidence intervals",
-    x = "Daily social media use (hours)",
-    y = "Anxiety level (1–10)",
-    colour = "Main platform"
-  ) +
-  theme_minimal()
-# Display the scatterplot
-print(p_scatter)
-
-# Extract coefficients and their confidence intervals
-# from the adjusted regression model.
-coefficient_intervals <- confint(model)
-
-coefs <- data.frame(
-  term = names(coef(model)),
-  estimate = unname(coef(model)),
-  low = coefficient_intervals[, 1],
-  high = coefficient_intervals[, 2],
-  row.names = NULL
-)
-
-# Focus the plot on predictors rather than the intercept.
-coefs <- coefs[coefs$term != "(Intercept)", ]
-
-
-# Plot 2: Show adjusted regression coefficients.
-# The dashed line marks a coefficient of zero.
-p_coefs <- ggplot(
-  coefs,
-  aes(x = term, y = estimate)
-) +
-  geom_hline(
-    yintercept = 0,
-    linetype = "dashed",
-    colour = "grey50"
-  ) +
-  geom_pointrange(
-    aes(ymin = low, ymax = high)
-  ) +
-  coord_flip() +
-  labs(
-    title = "Regression coefficients for anxiety",
-    x = NULL,
-    y = "Regression coefficient with 95% confidence interval"
-  ) +
-  theme_minimal()
-
-# Display the coefficient plot
-print(p_coefs)
-
-#Plot 1
+#Plot 1: Show the observed relationship within each platform.
 platform_colours <- c(Other = "#999999", Both = "#009E73", Instagram = "#CC79A7", TikTok = "#0072B2")
 
 p_scatter <- ggplot(data, aes(daily_social_media_hours, anxiety_level,
@@ -146,6 +82,8 @@ p_scatter <- ggplot(data, aes(daily_social_media_hours, anxiety_level,
     plot.title = element_text(face = "bold"),
     plot.title.position = "plot"
   )
+
+# Display the scatterplot
 print(p_scatter)
 
 #Plot 2
