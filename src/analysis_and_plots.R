@@ -86,7 +86,7 @@ p_scatter <- ggplot(data, aes(daily_social_media_hours, anxiety_level,
 # Display the scatterplot
 print(p_scatter)
 
-#Plot 2
+#Plot 2: Shows regression coefficients and 95% confidence intervals for predictors of anxiety scores
 pretty_labels <- c(
   daily_social_media_hours = "Social media (hours/day)",
   sleep_hours              = "Sleep (hours/night)",
