@@ -1,3 +1,4 @@
+install.packages("ggplot2")
 library(ggplot2)
 
 # This script uses the dataset prepared by src/data.R.
@@ -55,66 +56,61 @@ plot_residual_checks <- function(model) {
 # Display residual diagnostic plots
 plot_residual_checks(model)
 
-# Plot 1: Show the observed relationship within each platform.
-# These trend lines are not adjusted for the other predictors.
-p_scatter <- ggplot(
-  data,
-  aes(
-    x = daily_social_media_hours,
-    y = anxiety_level,
-    colour = platform_usage
-  )
-) +
-  geom_point(alpha = 0.25) +
-  geom_smooth(method = "lm", formula = y ~ x) +
+#Plot 1: Show the observed relationship within each platform.
+platform_colours <- c(Other = "#999999", Both = "#009E73", Instagram = "#CC79A7", TikTok = "#0072B2")
+
+p_scatter <- ggplot(data, aes(daily_social_media_hours, anxiety_level,
+                              colour = platform_usage, fill = platform_usage)) +
+  geom_jitter(height = 0.3, width = 0.05, alpha = 0.18, size = 0.8) +
+  geom_smooth(method = "lm", formula = y ~ x, linewidth = 1.1, alpha = 0.25) +
+  facet_wrap(~ platform_usage, ncol = 2) +
+  scale_colour_manual(values = platform_colours) +
+  scale_fill_manual(values = platform_colours) +
+  scale_x_continuous(breaks = 1:8) +
+  scale_y_continuous(breaks = 1:10) +
   labs(
-    title = "Social media use and anxiety by platform",
-    subtitle = "Lines show unadjusted trends with 95% confidence intervals",
+    title = "Anxiety rises with social media use, whichever platform teens use most",
+    subtitle = paste0("Each dot is one teenager (n = ", nrow(data), "); line = linear trend with 95% CI"),
     x = "Daily social media use (hours)",
-    y = "Anxiety level (1–10)",
-    colour = "Main platform"
+    y = "Anxiety level (1-10)"
   ) +
-  theme_minimal()
+  theme_minimal(base_size = 12) +
+  theme(
+    legend.position = "none",
+    panel.grid.minor = element_blank(),
+    strip.text = element_text(face = "bold", size = 12),
+    plot.title = element_text(face = "bold"),
+    plot.title.position = "plot"
+  )
+
 # Display the scatterplot
 print(p_scatter)
 
-# Extract coefficients and their confidence intervals
-# from the adjusted regression model.
-coefficient_intervals <- confint(model)
-
-coefs <- data.frame(
-  term = names(coef(model)),
-  estimate = unname(coef(model)),
-  low = coefficient_intervals[, 1],
-  high = coefficient_intervals[, 2],
-  row.names = NULL
+#Plot 2: Shows regression coefficients and 95% confidence intervals for predictors of anxiety scores
+pretty_labels <- c(
+  daily_social_media_hours = "Social media (hours/day)",
+  sleep_hours              = "Sleep (hours/night)",
+  age                      = "Age (years)",
+  gendermale               = "Gender: male (vs. female)",
+  platform_usageBoth       = "Platform: both (vs. other)",
+  platform_usageInstagram  = "Platform: Instagram (vs. other)",
+  platform_usageTikTok     = "Platform: TikTok (vs. other)"
 )
+coefs$label <- factor(pretty_labels[coefs$term], levels = rev(unname(pretty_labels)))
+coefs$significant <- coefs$low > 0 | coefs$high < 0   # CI excludes zero
 
-# Focus the plot on predictors rather than the intercept.
-coefs <- coefs[coefs$term != "(Intercept)", ]
-
-
-# Plot 2: Show adjusted regression coefficients.
-# The dashed line marks a coefficient of zero.
-p_coefs <- ggplot(
-  coefs,
-  aes(x = term, y = estimate)
-) +
-  geom_hline(
-    yintercept = 0,
-    linetype = "dashed",
-    colour = "grey50"
+p_coefs <- ggplot(coefs, aes(estimate, label, xmin = low, xmax = high, colour = significant)) +
+  geom_vline(xintercept = 0, linetype = "dashed", colour = "grey50") +
+  geom_pointrange(size = 0.7) +
+  scale_colour_manual(
+    values = c("TRUE" = "#D55E00", "FALSE" = "grey55"),
+    labels = c("TRUE" = "Significant (p < .05)", "FALSE" = "Not significant"),
+    name = NULL
   ) +
-  geom_pointrange(
-    aes(ymin = low, ymax = high)
-  ) +
-  coord_flip() +
-  labs(
-    title = "Regression coefficients for anxiety",
-    x = NULL,
-    y = "Regression coefficient with 95% confidence interval"
-  ) +
-  theme_minimal()
+  labs(title = "Only social media use and sleep predict anxiety",
+       x = "Change in anxiety score (points), with 95% CI", y = NULL) +
+  theme_minimal(base_size = 12) +
+  theme(legend.position = "bottom")
 
-# Display the coefficient plot
+#Display coefficients plot
 print(p_coefs)
