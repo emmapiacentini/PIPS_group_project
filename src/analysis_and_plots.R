@@ -111,3 +111,6 @@ p_coefs <- ggplot(coefs, aes(estimate, label, xmin = low, xmax = high, colour = 
        x = "Change in anxiety score (points), with 95% CI", y = NULL) +
   theme_minimal(base_size = 12) +
   theme(legend.position = "bottom")
+
+#Display coefficients plot
+print(p_coefs)
