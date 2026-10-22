@@ -1,3 +1,4 @@
+#Loading data
 data_path <- if (file.exists("data/Teen_Mental_Health_Dataset.csv")) {
   "data/Teen_Mental_Health_Dataset.csv"
 } else {
