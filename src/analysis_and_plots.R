@@ -1,3 +1,4 @@
+install.packages("ggplot2")
 library(ggplot2)
 
 # This script uses the dataset prepared by src/data.R.
@@ -118,3 +119,57 @@ p_coefs <- ggplot(
 
 # Display the coefficient plot
 print(p_coefs)
+
+#Plot 1
+platform_colours <- c(Other = "#999999", Both = "#009E73", Instagram = "#CC79A7", TikTok = "#0072B2")
+
+p_scatter <- ggplot(data, aes(daily_social_media_hours, anxiety_level,
+                              colour = platform_usage, fill = platform_usage)) +
+  geom_jitter(height = 0.3, width = 0.05, alpha = 0.18, size = 0.8) +
+  geom_smooth(method = "lm", formula = y ~ x, linewidth = 1.1, alpha = 0.25) +
+  facet_wrap(~ platform_usage, ncol = 2) +
+  scale_colour_manual(values = platform_colours) +
+  scale_fill_manual(values = platform_colours) +
+  scale_x_continuous(breaks = 1:8) +
+  scale_y_continuous(breaks = 1:10) +
+  labs(
+    title = "Anxiety rises with social media use, whichever platform teens use most",
+    subtitle = paste0("Each dot is one teenager (n = ", nrow(data), "); line = linear trend with 95% CI"),
+    x = "Daily social media use (hours)",
+    y = "Anxiety level (1-10)"
+  ) +
+  theme_minimal(base_size = 12) +
+  theme(
+    legend.position = "none",
+    panel.grid.minor = element_blank(),
+    strip.text = element_text(face = "bold", size = 12),
+    plot.title = element_text(face = "bold"),
+    plot.title.position = "plot"
+  )
+print(p_scatter)
+
+#Plot 2
+pretty_labels <- c(
+  daily_social_media_hours = "Social media (hours/day)",
+  sleep_hours              = "Sleep (hours/night)",
+  age                      = "Age (years)",
+  gendermale               = "Gender: male (vs. female)",
+  platform_usageBoth       = "Platform: both (vs. other)",
+  platform_usageInstagram  = "Platform: Instagram (vs. other)",
+  platform_usageTikTok     = "Platform: TikTok (vs. other)"
+)
+coefs$label <- factor(pretty_labels[coefs$term], levels = rev(unname(pretty_labels)))
+coefs$significant <- coefs$low > 0 | coefs$high < 0   # CI excludes zero
+
+p_coefs <- ggplot(coefs, aes(estimate, label, xmin = low, xmax = high, colour = significant)) +
+  geom_vline(xintercept = 0, linetype = "dashed", colour = "grey50") +
+  geom_pointrange(size = 0.7) +
+  scale_colour_manual(
+    values = c("TRUE" = "#D55E00", "FALSE" = "grey55"),
+    labels = c("TRUE" = "Significant (p < .05)", "FALSE" = "Not significant"),
+    name = NULL
+  ) +
+  labs(title = "Only social media use and sleep predict anxiety",
+       x = "Change in anxiety score (points), with 95% CI", y = NULL) +
+  theme_minimal(base_size = 12) +
+  theme(legend.position = "bottom")
